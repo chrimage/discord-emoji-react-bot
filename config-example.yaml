@@ -19,6 +19,5 @@ whitelisted_channels:
 # Optional Settings
 log_level: "INFO"  # DEBUG, INFO, WARNING, ERROR
 ignore_bots: true  # Don't react to other bot messages
-ignore_links_only: true  # Skip messages that are just links without context
 check_tone_appropriateness: true  # Use AI to check if tone is appropriate for emoji reactions
 tone_model: "gpt-4o-mini"  # Model for tone classification (faster/cheaper than main model)

@@ -74,20 +74,6 @@ class EmojiReactBot:
         if not content and not message.embeds and not message.attachments:
             return True
             
-        # Check for link-only messages if configured to ignore them
-        if self.config.get('ignore_links_only', True) and content:
-            # URL pattern detection
-            url_pattern = re.compile(r'https?://[^\s]+|www\.[^\s]+')
-            urls = url_pattern.findall(content)
-            # Remove URLs and check if anything substantial remains
-            content_without_urls = url_pattern.sub('', content).strip()
-            if urls and len(content_without_urls) < 3:  # Only URLs or minimal text
-                return True
-                
-        # Ignore messages that are just Discord mentions
-        if content and content.replace('<@', '').replace('>', '').replace('!', '').replace('#', '').replace('&', '').isdigit():
-            return True
-            
         # Ignore system messages
         if message.type != discord.MessageType.default and message.type != discord.MessageType.reply:
             return True
@@ -212,12 +198,14 @@ RESPOND WITH ONLY: YES or NO
 
 Appropriate for emoji reactions:
 - Casual conversation, jokes, memes
-- Sharing content, achievements, experiences
+- Sharing content with context/enthusiasm
 - Questions, discussions, observations
 - Positive, neutral, or lighthearted content
 - Social media style posts
 
 NOT appropriate for emoji reactions:
+- Solo links without context or commentary
+- Minimal content with ambiguous intent
 - Serious discussions about sensitive topics
 - Arguments, conflicts, heated debates
 - Personal problems, venting, emotional distress
@@ -249,44 +237,13 @@ Message to classify:"""
             return True
     
     def extract_emoji(self, text: str) -> Optional[str]:
-        """Extract a single emoji from text"""
+        """Extract first character as emoji - keep it simple"""
         if not text:
             return None
         
-        # Comprehensive Unicode emoji pattern (Unicode 15.0)
-        unicode_emoji_pattern = re.compile(
-            r'[\U0001F600-\U0001F64F]|'  # emoticons
-            r'[\U0001F300-\U0001F5FF]|'  # symbols & pictographs
-            r'[\U0001F680-\U0001F6FF]|'  # transport & map symbols
-            r'[\U0001F1E0-\U0001F1FF]|'  # flags
-            r'[\U00002700-\U000027BF]|'  # dingbats
-            r'[\U000024C2-\U0001F251]|'  # enclosed characters
-            r'[\U0001F900-\U0001F9FF]|'  # supplemental symbols
-            r'[\U0001FA70-\U0001FAFF]|'  # symbols and pictographs extended-A
-            r'[\U00002600-\U000026FF]|'  # miscellaneous symbols
-            r'[\U0001F780-\U0001F7FF]|'  # geometric shapes extended
-            r'[\U0001F3FB-\U0001F3FF]'   # skin tone modifiers
-        )
-        
-        # Discord custom emoji pattern <:name:id>
-        discord_emoji_pattern = re.compile(r'<a?:\w+:\d+>')
-        
-        # Look for Discord custom emoji first
-        discord_match = discord_emoji_pattern.search(text)
-        if discord_match:
-            return discord_match.group()
-        
-        # Look for Unicode emoji
-        unicode_match = unicode_emoji_pattern.search(text)
-        if unicode_match:
-            return unicode_match.group()
-        
-        # If no emoji found, try to get first character if it might be an emoji
-        first_char = text[0] if text else None
-        if first_char and ord(first_char) > 127:  # Non-ASCII character
-            return first_char
-        
-        return None
+        # Just return the first character - if it's not an emoji, Discord will reject it
+        # Let Discord handle the validation instead of complex regex
+        return text.strip()[0] if text.strip() else None
     
     async def add_reaction(self, message: discord.Message, emoji: str):
         """Add emoji reaction to message"""

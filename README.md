@@ -8,12 +8,12 @@ A delightfully silly Discord bot that uses AI to react to every message with con
 
 - 🤖 Uses GPT-4o-mini/gpt-4.1-nano to generate contextual emoji reactions
 - 👀 **Image recognition** - Reacts to photos, memes, and visual content
+- 🧠 **AI tone classifier** - Knows when reactions are appropriate vs awkward
 - 📝 Channel whitelist system - only reacts in explicitly enabled channels  
-- 🎯 Supports both Unicode emojis and Discord custom emojis
-- 🚫 Smart content filtering - ignores links, system messages, and other noise
+- 🎯 Simple emoji extraction - let Discord handle validation
 - 🤝 Optional bot interaction - can react to other bots too
 - 🛡️ Built-in error handling and logging
-- ⚡ Lightweight - under 250 lines of code
+- ⚡ Lightweight - ~300 lines of code
 
 ## Setup
 
@@ -71,10 +71,30 @@ python emoji_bot.py
 
 The bot will:
 - Listen for messages in whitelisted channels
-- Analyze text and images using OpenAI's Vision API
+- **Check tone appropriateness** using AI classifier (avoids awkward reactions)
+- Analyze text and images using OpenAI's Vision API  
 - Generate contextually appropriate emoji reactions
 - React to the original message with that emoji
-- Ignore system messages, bare links, and other noise
+
+## How the AI Classifier Works
+
+The bot makes **two AI calls** per message for maximum social awareness:
+
+1. **Tone Classification** (fast) - "Is this appropriate for emoji reactions?"
+2. **Emoji Generation** (if appropriate) - "What emoji fits this content?"
+
+**✅ Will React To:**
+- Casual conversation and jokes
+- Sharing content with enthusiasm ("check this out!")
+- Social media style posts
+- Questions and discussions with context
+
+**❌ Will Skip:**
+- Solo links without context (`https://example.com`)
+- Serious discussions about sensitive topics
+- Arguments, emergencies, or distress
+- Minimal/ambiguous content
+- Professional communications
 
 ## Configuration Options
 
@@ -84,7 +104,8 @@ The bot will:
 | `system_prompt` | Instructions for emoji generation | Predefined prompt |
 | `log_level` | Logging verbosity | `INFO` |
 | `ignore_bots` | Skip messages from other bots | `true` |
-| `ignore_links_only` | Skip messages that are just bare links | `true` |
+| `check_tone_appropriateness` | Use AI to check if reactions are appropriate | `true` |
+| `tone_model` | Model for tone classification (separate from main model) | `gpt-4o-mini` |
 
 ## Logs
 
