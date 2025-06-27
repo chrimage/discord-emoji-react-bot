@@ -116,6 +116,13 @@ class EmojiReactBot:
         logging.info(f"Processing message from {message.author} in #{message.channel.name}: {message.content[:100]}")
         
         try:
+            # Check if tone is appropriate for emoji reactions (if enabled)
+            if self.config.get('check_tone_appropriateness', True):
+                is_appropriate = await self.is_tone_appropriate(message)
+                if not is_appropriate:
+                    logging.debug(f"Skipping emoji reaction - inappropriate tone detected")
+                    return
+            
             # Get emoji from LLM (with image support)
             emoji = await self.get_emoji_reaction(message)
             if emoji:
@@ -192,6 +199,54 @@ class EmojiReactBot:
         
         # Return single text content or multimodal content
         return content_parts[0]["text"] if len(content_parts) == 1 and content_parts[0]["type"] == "text" else content_parts
+    
+    async def is_tone_appropriate(self, message: discord.Message) -> bool:
+        """Check if the message tone is appropriate for emoji reactions"""
+        try:
+            # Prepare simplified content for tone analysis (text only for speed)
+            content = message.content.strip() or "[image/media content]"
+            
+            tone_check_prompt = """You are a tone classifier for emoji reactions. Determine if the message tone is appropriate for adding emoji reactions.
+
+RESPOND WITH ONLY: YES or NO
+
+Appropriate for emoji reactions:
+- Casual conversation, jokes, memes
+- Sharing content, achievements, experiences
+- Questions, discussions, observations
+- Positive, neutral, or lighthearted content
+- Social media style posts
+
+NOT appropriate for emoji reactions:
+- Serious discussions about sensitive topics
+- Arguments, conflicts, heated debates
+- Personal problems, venting, emotional distress
+- Bad news, emergencies, urgent matters
+- Professional/formal communications
+- Messages asking for help with serious issues
+
+Message to classify:"""
+
+            response = await self.openai_client.chat.completions.create(
+                model=self.config.get('tone_model', 'gpt-4o-mini'),  # Use faster model for classification
+                messages=[
+                    {"role": "system", "content": tone_check_prompt},
+                    {"role": "user", "content": content}
+                ],
+                max_tokens=5,
+                temperature=0.1  # Low temperature for consistent classification
+            )
+            
+            result = response.choices[0].message.content.strip().upper()
+            is_appropriate = result.startswith("YES")
+            
+            logging.debug(f"Tone check result: {result} -> {'Appropriate' if is_appropriate else 'Inappropriate'}")
+            return is_appropriate
+            
+        except Exception as e:
+            logging.error(f"Error in tone classification: {e}")
+            # Default to allowing reactions if classification fails
+            return True
     
     def extract_emoji(self, text: str) -> Optional[str]:
         """Extract a single emoji from text"""
