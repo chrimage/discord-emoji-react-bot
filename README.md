@@ -89,12 +89,17 @@ The bot makes **two AI calls** per message for maximum social awareness:
 - Social media style posts
 - Questions and discussions with context
 
-**❌ Will Skip:**
-- Solo links without context (`https://example.com`)
-- Serious discussions about sensitive topics
-- Arguments, emergencies, or distress
-- Minimal/ambiguous content
-- Professional communications
+**❌ Will Skip (only wildly inappropriate):**
+- Serious emergencies or crisis situations
+- Genuine distress or calls for help
+- Heated arguments or conflicts
+- Bad news or tragedy announcements
+
+**✅ Everything Else Gets Reactions:**
+- Casual chat, links, questions, sharing
+- Jokes, memes, discussions
+- Professional communication (why not?)
+- Short messages, ambiguous content
 
 ## Configuration Options
 
@@ -104,7 +109,7 @@ The bot makes **two AI calls** per message for maximum social awareness:
 | `system_prompt` | Instructions for emoji generation | Predefined prompt |
 | `log_level` | Logging verbosity | `INFO` |
 | `ignore_bots` | Skip messages from other bots | `true` |
-| `check_tone_appropriateness` | Use AI to check if reactions are appropriate | `true` |
+| `check_tone_appropriateness` | Use AI to avoid reacting to emergencies/distress (defaults to YES) | `true` |
 | `tone_model` | Model for tone classification (separate from main model) | `gpt-4o-mini` |
 
 ## Logs

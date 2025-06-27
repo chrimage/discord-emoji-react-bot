@@ -17,7 +17,7 @@ whitelisted_channels:
   # - 987654321098765432  # Add more channel IDs as needed
 
 # Optional Settings
-log_level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+log_level: "DEBUG"  # DEBUG, INFO, WARNING, ERROR - use DEBUG for troubleshooting
 ignore_bots: true  # Don't react to other bot messages
-check_tone_appropriateness: true  # Use AI to check if tone is appropriate for emoji reactions
+check_tone_appropriateness: true  # Use AI to avoid reacting to emergencies/distress (defaults to YES)
 tone_model: "gpt-4o-mini"  # Model for tone classification (faster/cheaper than main model)

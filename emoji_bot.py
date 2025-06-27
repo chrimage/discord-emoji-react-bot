@@ -104,19 +104,27 @@ class EmojiReactBot:
         try:
             # Check if tone is appropriate for emoji reactions (if enabled)
             if self.config.get('check_tone_appropriateness', True):
+                logging.debug("Checking tone appropriateness...")
                 is_appropriate = await self.is_tone_appropriate(message)
+                logging.info(f"Tone check result: {'✅ Appropriate' if is_appropriate else '❌ Inappropriate'}")
                 if not is_appropriate:
-                    logging.debug(f"Skipping emoji reaction - inappropriate tone detected")
+                    logging.info(f"Skipping emoji reaction - inappropriate tone detected")
                     return
+            else:
+                logging.debug("Tone checking disabled, proceeding to emoji generation")
             
             # Get emoji from LLM (with image support)
+            logging.debug("Getting emoji from LLM...")
             emoji = await self.get_emoji_reaction(message)
+            logging.info(f"LLM returned emoji: '{emoji}'")
+            
             if emoji:
+                logging.debug(f"Attempting to add reaction: {emoji}")
                 await self.add_reaction(message, emoji)
             else:
                 logging.warning("No valid emoji returned from LLM")
         except Exception as e:
-            logging.error(f"Error processing message: {e}")
+            logging.error(f"Error processing message: {e}", exc_info=True)
     
     async def get_emoji_reaction(self, message: discord.Message) -> Optional[str]:
         """Get emoji reaction from OpenAI with image support"""
@@ -135,10 +143,12 @@ class EmojiReactBot:
             )
             
             emoji_response = response.choices[0].message.content.strip()
-            logging.debug(f"LLM response: {emoji_response}")
+            logging.debug(f"LLM raw response: '{emoji_response}'")
             
             # Extract emoji from response
-            return self.extract_emoji(emoji_response)
+            extracted = self.extract_emoji(emoji_response)
+            logging.debug(f"Extracted emoji: '{extracted}'")
+            return extracted
             
         except Exception as e:
             logging.error(f"Error calling OpenAI API: {e}")
@@ -192,26 +202,17 @@ class EmojiReactBot:
             # Prepare simplified content for tone analysis (text only for speed)
             content = message.content.strip() or "[image/media content]"
             
-            tone_check_prompt = """You are a tone classifier for emoji reactions. Determine if the message tone is appropriate for adding emoji reactions.
+            tone_check_prompt = """You are a tone classifier for emoji reactions. Only say NO if the message is wildly inappropriate for emoji reactions.
 
 RESPOND WITH ONLY: YES or NO
 
-Appropriate for emoji reactions:
-- Casual conversation, jokes, memes
-- Sharing content with context/enthusiasm
-- Questions, discussions, observations
-- Positive, neutral, or lighthearted content
-- Social media style posts
+Default to YES unless the message is clearly:
+- Serious emergency or crisis
+- Someone expressing genuine distress or asking for help
+- Heated argument or conflict
+- Bad news or tragedy
 
-NOT appropriate for emoji reactions:
-- Solo links without context or commentary
-- Minimal content with ambiguous intent
-- Serious discussions about sensitive topics
-- Arguments, conflicts, heated debates
-- Personal problems, venting, emotional distress
-- Bad news, emergencies, urgent matters
-- Professional/formal communications
-- Messages asking for help with serious issues
+Everything else gets YES (casual chat, questions, sharing, jokes, memes, etc.)
 
 Message to classify:"""
 
@@ -228,6 +229,7 @@ Message to classify:"""
             result = response.choices[0].message.content.strip().upper()
             is_appropriate = result.startswith("YES")
             
+            logging.debug(f"Tone classifier raw response: '{response.choices[0].message.content}'")
             logging.debug(f"Tone check result: {result} -> {'Appropriate' if is_appropriate else 'Inappropriate'}")
             return is_appropriate
             
@@ -239,11 +241,20 @@ Message to classify:"""
     def extract_emoji(self, text: str) -> Optional[str]:
         """Extract first character as emoji - keep it simple"""
         if not text:
+            logging.debug("extract_emoji: No text provided")
             return None
+        
+        stripped = text.strip()
+        if not stripped:
+            logging.debug("extract_emoji: Text is empty after stripping")
+            return None
+            
+        first_char = stripped[0]
+        logging.debug(f"extract_emoji: First character is '{first_char}' (ord: {ord(first_char)})")
         
         # Just return the first character - if it's not an emoji, Discord will reject it
         # Let Discord handle the validation instead of complex regex
-        return text.strip()[0] if text.strip() else None
+        return first_char
     
     async def add_reaction(self, message: discord.Message, emoji: str):
         """Add emoji reaction to message"""
