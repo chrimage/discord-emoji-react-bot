@@ -1,0 +1,22 @@
+# Discord Bot Settings
+bot_token: ""  # Your Discord bot token
+client_id: ""  # Your Discord bot client ID (for logging)
+
+# OpenAI Settings
+openai_api_key: ""  # Your OpenAI API key
+model: "gpt-4o-mini"  # Model to use for emoji generation (or "gpt-4.1-nano" for vision)
+
+# Bot Configuration
+system_prompt: "You are an emoji reaction bot. When you receive a message (text, images, or both), analyze the content and respond with only a single emoji that best represents or reacts to what you see/read. Always respond with exactly one emoji, no text."
+
+# Channel Whitelist - Only react in these channels
+# Add channel IDs where the bot should react to messages
+# To get channel ID: Right-click channel in Discord > Copy Channel ID
+whitelisted_channels:
+  - 123456789012345678  # Example channel ID
+  # - 987654321098765432  # Add more channel IDs as needed
+
+# Optional Settings
+log_level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+ignore_bots: true  # Don't react to other bot messages
+ignore_links_only: true  # Skip messages that are just links without context
